@@ -156,7 +156,7 @@ describe 'fsArtifactory', ->
 
 		it 'should raise an exception if the file copy fails.', (done) ->
 
-			readStream u
+			readStream =
 				pipe: sinon.spy()
 			writeStream = { }
 
