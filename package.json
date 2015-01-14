@@ -1,0 +1,33 @@
+{
+  "name": "S3Artifactor",
+  "version": "0.0.1",
+  "description": "A command line nodejs app that utilizes AWS S3 for an artifact repository.",
+  "main": "bin/lib/artifactory.js",
+  "scripts": {
+    "test": "grunt --no-color"
+  },
+  "bin": {"s3artifactor": "./bin/lib/program.js"},
+  "author": "VeriShip SkunkWerks",
+  "license": "ISC",
+  "directories": {
+    "lib": "./bin/lib"
+  },
+  "engines": {
+    "node": ">=0.8.0"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-coffee": "^0.12.0",
+    "grunt-contrib-copy": "^0.7.0",
+    "grunt-mocha-test": "^0.12.6",
+    "mocha": "^2.1.0",
+    "should": "^4.4.4",
+    "sinon": "^1.12.2"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1.5",
+    "commander": "^2.6.0",
+    "lodash": "^2.4.1",
+    "q": "^1.1.2"
+  }
+}
