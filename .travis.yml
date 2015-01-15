@@ -1,6 +1,7 @@
 language: node_js
 node_js:
 - '0.10'
+- '0.11'
 before_script:
 - npm install -g grunt-cli
 - npm install
@@ -12,5 +13,7 @@ deploy:
   api_key:
     secure: <%= ENV['npmapikey'] %>
   on:
+    node: 0.10
     tags: true
+    branch: master
     repo: NiteoSoftware/s3artifactor
