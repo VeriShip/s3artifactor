@@ -1,5 +1,5 @@
 {
-  "name": "S3Artifactor",
+  "name": "s3artifactor",
   "version": "1.0.0",
   "description": "A command line nodejs app that utilizes AWS S3 for an artifact repository.",
   "main": "bin/lib/artifactory.js",
