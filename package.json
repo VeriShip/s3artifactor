@@ -1,6 +1,6 @@
 {
   "name": "s3artifactor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A command line nodejs app that utilizes AWS S3 for an artifact repository.",
   "main": "bin/lib/artifactory.js",
   "scripts": {
@@ -13,7 +13,7 @@
     "lib": "./bin/lib"
   },
   "engines": {
-    "node": ">=0.8.0"
+    "node": ">0.8.0"
   },
   "devDependencies": {
     "grunt": "^0.4.5",
