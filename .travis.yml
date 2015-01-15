@@ -9,6 +9,7 @@ script:
 deploy:
   provider: npm
   email: npm@niteoholdings.com
+  skip_cleanup: true
   api_key:
     secure: <%= ENV['npmapikey'] %>
   on:
