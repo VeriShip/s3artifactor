@@ -15,5 +15,5 @@ deploy:
   on:
     node: 0.10
     tags: true
-    branch: master
+    all_branches: true
     repo: NiteoSoftware/s3artifactor
