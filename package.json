@@ -8,9 +8,13 @@
   },
   "bin": {"s3artifactor": "./bin/lib/program.js"},
   "author": "VeriShip SkunkWerks",
-  "license": "ISC",
+  "license": "MIT",
   "directories": {
     "lib": "./bin/lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NiteoSoftware/s3artifactor.git"
   },
   "engines": {
     "node": ">0.8.0"
