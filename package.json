@@ -6,7 +6,9 @@
   "scripts": {
     "test": "grunt --no-color"
   },
-  "bin": {"s3artifactor": "./bin/lib/program.js"},
+  "bin": {
+    "s3artifactor": "./bin/lib/program.js"
+  },
   "author": "VeriShip SkunkWerks",
   "license": "MIT",
   "directories": {
@@ -32,6 +34,7 @@
     "aws-sdk": "^2.1.5",
     "commander": "^2.6.0",
     "lodash": "^2.4.1",
-    "q": "^1.1.2"
+    "q": "^1.1.2",
+    "string": "^3.0.0"
   }
 }

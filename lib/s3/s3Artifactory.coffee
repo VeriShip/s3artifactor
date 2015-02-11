@@ -1,6 +1,7 @@
 Q = require 'q'
 fs = require 'fs'
 path = require 'path'
+S = require 'string'
 s3Key = require path.join(__dirname, 's3Key.js')
 
 module.exports = class
@@ -24,7 +25,7 @@ module.exports = class
 	getArtifacts: () ->
 		@artifactCollection.get()
 
-	pushArtifact: (sourcePath, version, isPublic, isEncrypted) ->
+	pushArtifact: (sourcePath, version, isPublic, isEncrypted, overwrite) ->
 
 		if !sourcePath?
 			Q.reject 'You must supply a source path.'	
@@ -32,53 +33,70 @@ module.exports = class
 		if !version?
 			Q.reject 'You must supply a version.'
 
-		@artifactCollection.get(version)
-			.then (existingVersion) =>
-				deferred = Q.defer()
-				if existingVersion?
-					deferred.reject "That version of #{@id}, version #{version} already exists."
-				else
-					file = @fs.createReadStream sourcePath
-					options = 
-						params:
-							Bucket: @bucket
-							Key: @key.get()
-							Body: file
-							ACL: 'private'
-							Metadata:
-								version: version
+		promise = Q()
 
-					if isPublic
-						options.params.ACL = 'public-read'
-
-					if isEncrypted
-						options.params.ServerSideEncryption = 'AES256'
-
-					managedUpload = new @aws.S3.ManagedUpload options
-
-					managedUpload.on 'httpUploadProgress', deferred.notify
-
-					managedUpload.send (err, data) ->
-						if err?
-							deferred.reject err
+		#	We allow the user to overwrite the latest version.  If they have not supplied the 
+		#	latest version then we raise an exception.
+		if(overwrite ? false)
+			promise = promise.then =>
+				@artifactCollection.getLatest()
+					.then (data) =>
+						if data.Version == version
+							return @deleteArtifact version
 						else
-							deferred.resolve data
+							return Q.reject("The version (#{version}) supplied was not the latest.  Only the latest can be overwritten.")
 
-				deferred.promise
+		promise.then =>
+			@artifactCollection.get(version)
+				.then (existingVersion) =>
+					deferred = Q.defer()
+					if existingVersion?
+						deferred.reject "That version of #{@id}, version #{version} already exists."
+					else
+						file = @fs.createReadStream sourcePath
+						options = 
+							params:
+								Bucket: @bucket
+								Key: @key.get()
+								Body: file
+								ACL: 'private'
+								Metadata:
+									version: version
+
+						if isPublic
+							options.params.ACL = 'public-read'
+
+						if isEncrypted
+							options.params.ServerSideEncryption = 'AES256'
+
+						managedUpload = new @aws.S3.ManagedUpload options
+
+						managedUpload.on 'httpUploadProgress', deferred.notify
+
+						managedUpload.send (err, data) ->
+							if err?
+								deferred.reject err
+							else
+								deferred.resolve data
+
+					deferred.promise
 		
 	getArtifact: (destPath, version) ->
 
 		if !destPath?
 			Q.reject 'You must supply a dest path.'	
 
-		if !version?
-			Q.reject 'You must supply a version.'
+		promise = null
+		version = if S((version ? "").toLowerCase()).trim().s == 'latest' then null else version
+		if version?
+			promise = @artifactCollection.get(version)
+		else
+			promise = @artifactCollection.getLatest()
 
-		@artifactCollection.get(version)
-			.then (existingVersion) =>
+		promise.then (existingVersion) =>
 				deferred = Q.defer()
 				if not existingVersion?
-					deferred.reject "That version of #{@id}, version #{version} exist already."
+					deferred.reject "That version of #{@id}, version #{version ? 'latest'}, does not exist."
 
 				else
 					options = 

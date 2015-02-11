@@ -21,7 +21,7 @@ module.exports =
 
 		switch program.action
 			when "list" then promise = artifactory.getArtifacts()
-			when "push" then promise = artifactory.pushArtifact(program.sourcePath, program.versionid, program.public, program.encrypt)
+			when "push" then promise = artifactory.pushArtifact(program.sourcePath, program.versionid, program.public, program.encrypt, program.overwrite)
 			when "get" then promise = artifactory.getArtifact(program.destPath, program.versionid)
 			when "delete" then promise = artifactory.deleteArtifact(program.version)
 			else promise = Q.reject "Unknown verb: #{program.verb}"

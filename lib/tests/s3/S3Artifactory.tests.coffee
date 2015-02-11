@@ -49,14 +49,18 @@ describe 's3Artifactory', ->
 		}
 	]
 
+	sourceArtifacts = null
+
 	beforeEachFunction = () ->
+		sourceArtifacts = JSON.parse(JSON.stringify(stockArtifacts))
 		collection = 
 			get: (version) ->
 				if version?
-					Q.resolve(_.find stockArtifacts, { Version: version })
+					Q.resolve(_.find sourceArtifacts, { Version: version })
 				else
-					Q.resolve stockArtifacts
+					Q.resolve sourceArtifacts
 			getLatest: () ->
+				Q.resolve(_.find sourceArtifacts, { IsLatest: true })
 		aws = { }
 		fs = { } 
 		region = "Some Region"
@@ -140,7 +144,7 @@ describe 's3Artifactory', ->
 
 			getTarget().key.should.eql key
 
-	describe '#pushArtifact(sourcePath, version, isPublic, isEncrypted)', ->
+	describe '#pushArtifact(sourcePath, version, isPublic, isEncrypted, overwrite)', ->
 
 		it 'should raise an error if sourcePath is null.', (done) ->
 			getTarget().pushArtifact null, '0.0.5'
@@ -220,6 +224,76 @@ describe 's3Artifactory', ->
 							ACL: 'private'
 							Metadata:
 								version: '0.0.6'
+					done()
+
+		it 'should delete the latest if overwrite is true', (done) ->
+
+			readStream = { }
+			actualManagedUploadOptions = null
+			deleteOptions = null
+			createReadStreamStub = sinon.stub()
+			createReadStreamStub.returns readStream
+			key = new s3Key id
+
+			fs = 
+				createReadStream: createReadStreamStub
+			aws = 
+				S3: class
+					deleteObject: (options, callback) =>
+						deleteOptions = options
+						sourceArtifacts = _.filter sourceArtifacts, (item) ->
+							item.VersionId != options.VersionId	
+						callback null, { }
+			aws.S3.ManagedUpload = class
+						constructor: (options) ->
+							actualManagedUploadOptions = options
+						send: (callback) ->
+							callback null, { }
+						on: () ->
+
+			getTarget().pushArtifact 'some Path', '0.0.4', false, false, true
+				.done (data) ->
+					actualManagedUploadOptions.should.eql
+						params:
+							Bucket: bucket
+							Key: key.get()
+							Body: readStream
+							ACL: 'private'
+							Metadata:
+								version: '0.0.4'
+					deleteOptions.should.eql
+						Bucket: bucket
+						Key: key.get()
+						VersionId: "4"
+					done()
+
+		it 'should raise an exception if overwrite is true and the version is not the latest version', (done) ->
+
+			readStream = { }
+			actualManagedUploadOptions = null
+			deleteOptions = null
+			createReadStreamStub = sinon.stub()
+			createReadStreamStub.returns readStream
+			key = new s3Key id
+
+			fs = 
+				createReadStream: createReadStreamStub
+			aws = 
+				S3: class
+					deleteObject: (options, callback) =>
+						deleteOptions = options
+						sourceArtifacts = _.filter sourceArtifacts, (item) ->
+							item.VersionId != options.VersionId	
+						callback null, { }
+			aws.S3.ManagedUpload = class
+						constructor: (options) ->
+							actualManagedUploadOptions = options
+						send: (callback) ->
+							callback null, { }
+						on: () ->
+
+			getTarget().pushArtifact 'some Path', '0.0.2', false, false, true
+				.catch (err) ->
 					done()
 
 		it 'should set the correct ACL when isPublic is set to true.', (done) ->
@@ -345,16 +419,6 @@ describe 's3Artifactory', ->
 				.catch (err) ->
 					done()
 
-		it 'should raise an error if version is null.', (done) ->
-			getTarget().getArtifact 'path', null
-				.catch (err) ->
-					done()
-
-		it 'should raise an error if version is undefined.', (done) ->
-			getTarget().getArtifact 'path', undefined 
-				.catch (err) ->
-					done()
-
 		it 'should raise an error if the version does not exists.', (done) ->
 			getTarget().getArtifact 'path', '0.0.5'
 				.catch (err) ->
@@ -407,13 +471,13 @@ describe 's3Artifactory', ->
 						actualManagedUploadOptions = options
 						request
 
-			promise = getTarget().getArtifact "some Path", "0.0.4"
+			promise = getTarget().getArtifact "some Path", "0.0.2"
 
 			promise.done (data) ->
 					actualManagedUploadOptions.should.eql
 						Bucket: bucket
 						Key: key.get()
-						VersionId: "4"	
+						VersionId: "2"	
 					done()
 
 		it "'httpData' should have been registered.", (done) ->
@@ -566,8 +630,6 @@ describe 's3Artifactory', ->
 
 		it "'httpDone' should end the file.", (done) ->
 
-			chunk = { }
-			actualManagedUploadOptions = null
 			writeStreamStub = 
 				write: sinon.stub()
 				end: sinon.stub()
@@ -591,6 +653,97 @@ describe 's3Artifactory', ->
 					request.emit('httpDone')
 					writeStreamStub.end.calledOnce.should.be.true
 					done()
+
+		it "should get the latest version if 'Latest' is passed in for version id.", (done) ->
+
+			actualManagedUploadOptions = null
+			writeStreamStub = sinon.stub()
+			createWriteStreamStub = sinon.stub()
+			createWriteStreamStub.returns writeStreamStub
+			key = new s3Key id
+
+			requestDef = class extends events.EventEmitter
+				send: () ->
+					@emit 'success'
+
+			request = new requestDef
+			fs = 
+				createWriteStream: createWriteStreamStub
+			aws = 
+				S3: class
+					getObject: (options) ->
+						actualManagedUploadOptions = options
+						request
+
+			promise = getTarget().getArtifact "some Path", "Latest"
+
+			promise.done (data) ->
+					actualManagedUploadOptions.should.eql
+						Bucket: bucket
+						Key: key.get()
+						VersionId: "4"	
+					done()
+
+		it "should get the latest if version id is undefined.", (done) ->
+
+			actualManagedUploadOptions = null
+			writeStreamStub = sinon.stub()
+			createWriteStreamStub = sinon.stub()
+			createWriteStreamStub.returns writeStreamStub
+			key = new s3Key id
+
+			requestDef = class extends events.EventEmitter
+				send: () ->
+					@emit 'success'
+
+			request = new requestDef
+			fs = 
+				createWriteStream: createWriteStreamStub
+			aws = 
+				S3: class
+					getObject: (options) ->
+						actualManagedUploadOptions = options
+						request
+
+			promise = getTarget().getArtifact "some Path", undefined
+
+			promise.done (data) ->
+					actualManagedUploadOptions.should.eql
+						Bucket: bucket
+						Key: key.get()
+						VersionId: "4"	
+					done()
+
+		it "should get the latest if version id is null.", (done) ->
+
+			actualManagedUploadOptions = null
+			writeStreamStub = sinon.stub()
+			createWriteStreamStub = sinon.stub()
+			createWriteStreamStub.returns writeStreamStub
+			key = new s3Key id
+
+			requestDef = class extends events.EventEmitter
+				send: () ->
+					@emit 'success'
+
+			request = new requestDef
+			fs = 
+				createWriteStream: createWriteStreamStub
+			aws = 
+				S3: class
+					getObject: (options) ->
+						actualManagedUploadOptions = options
+						request
+
+			promise = getTarget().getArtifact "some Path", null
+
+			promise.done (data) ->
+					actualManagedUploadOptions.should.eql
+						Bucket: bucket
+						Key: key.get()
+						VersionId: "4"	
+					done()
+
 
 	describe '#deleteArtifact(version)', ->
 

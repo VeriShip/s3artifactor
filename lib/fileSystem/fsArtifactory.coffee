@@ -1,4 +1,5 @@
 Q = require 'q'
+S = require 'string'
 
 module.exports = class
 	constructor: (@artifactCollection, @fs, @region, @bucket, @id) ->
@@ -26,10 +27,14 @@ module.exports = class
 		if !destPath?
 			return Q.reject 'You must supply a destPath.'
 
-		if !version?
-			return Q.reject 'You must supply a version.'
+		promise = null
+		version = if S((version ? "").toLowerCase()).trim().s == 'latest' then null else version
+		if version?
+			promise = @artifactCollection.get(version)
+		else
+			promise = @artifactCollection.getLatest()
 
-		@artifactCollection.get(version).then (data) =>
+		promise.then (data) =>
 
 			deferred = Q.defer()
 

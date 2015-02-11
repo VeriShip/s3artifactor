@@ -33,6 +33,8 @@ beforeEachFunction = () ->
 				Q(_.find artifacts, {Version: version })
 			else
 				Q(artifacts)
+		getLatest: () ->
+			Q.resolve(_.find artifacts, { IsLatest: true })
 	fs = 
 		createReadStream: () ->
 		createWriteStream: () ->
@@ -111,19 +113,7 @@ describe 'fsArtifactory', ->
 				.catch (err) ->
 					done()
 
-		it 'should raise an exception if version is null.', (done) ->
-
-			getTarget().getArtifact("", null)
-				.catch (err) ->
-					done()
-
-		it 'should raise an exception if version is undefined.', (done) ->
-
-			getTarget().getArtifact("", undefined)
-				.catch (err) ->
-					done()
-
-		it 'should raise an exception if the version is undefined.', (done) ->
+		it 'should raise an exception if the version is not found.', (done) ->
 
 			getTarget().getArtifact("Some Dest Path", "0.0.10")
 				.catch (err) ->
@@ -150,6 +140,81 @@ describe 'fsArtifactory', ->
 						#	we copy the file correctly.
 						fs.createReadStream.calledOnce.should.be.true
 						fs.createReadStream.calledWithExactly artifacts[0].Path
+						fs.createWriteStream.calledOnce.should.be.true
+						fs.createWriteStream.calledWithExactly "Some Dest Path"
+						done()
+
+		it 'should copy latest if version is Latest.', (done) ->
+
+			readStream =
+				pipe: (writable) ->
+					writable
+			writeStream = 
+				on: (e, func) ->
+					if e == 'finish'
+						func()
+
+			fs = 
+				createReadStream: sinon.stub().returns readStream 
+				createWriteStream: sinon.stub().returns writeStream
+
+			getTarget().getArtifact("Some Dest Path", "Latest")
+				.done (data) ->
+
+						#	All of these assertions are needed to guarantee that
+						#	we copy the file correctly.
+						fs.createReadStream.calledOnce.should.be.true
+						fs.createReadStream.calledWithExactly artifacts[1].Path
+						fs.createWriteStream.calledOnce.should.be.true
+						fs.createWriteStream.calledWithExactly "Some Dest Path"
+						done()
+
+		it 'should copy latest if version is undefined.', (done) ->
+
+			readStream =
+				pipe: (writable) ->
+					writable
+			writeStream = 
+				on: (e, func) ->
+					if e == 'finish'
+						func()
+
+			fs = 
+				createReadStream: sinon.stub().returns readStream 
+				createWriteStream: sinon.stub().returns writeStream
+
+			getTarget().getArtifact("Some Dest Path", undefined)
+				.done (data) ->
+
+						#	All of these assertions are needed to guarantee that
+						#	we copy the file correctly.
+						fs.createReadStream.calledOnce.should.be.true
+						fs.createReadStream.calledWithExactly artifacts[1].Path
+						fs.createWriteStream.calledOnce.should.be.true
+						fs.createWriteStream.calledWithExactly "Some Dest Path"
+						done()
+
+		it 'should copy latest if version is null.', (done) ->
+
+			readStream =
+				pipe: (writable) ->
+					writable
+			writeStream = 
+				on: (e, func) ->
+					if e == 'finish'
+						func()
+
+			fs = 
+				createReadStream: sinon.stub().returns readStream 
+				createWriteStream: sinon.stub().returns writeStream
+
+			getTarget().getArtifact("Some Dest Path", null)
+				.done (data) ->
+
+						#	All of these assertions are needed to guarantee that
+						#	we copy the file correctly.
+						fs.createReadStream.calledOnce.should.be.true
+						fs.createReadStream.calledWithExactly artifacts[1].Path
 						fs.createWriteStream.calledOnce.should.be.true
 						fs.createWriteStream.calledWithExactly "Some Dest Path"
 						done()
