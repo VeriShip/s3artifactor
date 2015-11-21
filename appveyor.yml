@@ -6,14 +6,16 @@ init:
 
 # Test against these versions of Node.js.
 environment:
-  matrix:
+    matrix:
     - nodejs_version: "0.10"
     - nodejs_version: "0.11"
+    - nodejs_version: "0.12"
+    - nodejs_version: "4.0.0"
+    - nodejs_version: "5.0.0"
 
-# Allow failing jobs for bleeding-edge Node.js versions.
-matrix:
-  allow_failures:
-    - nodejs_version: "0.11"
+platform:
+    - x86
+    - x64
 
 # Install scripts. (runs after repo cloning)
 install:
@@ -21,15 +23,13 @@ install:
   - ps: Install-Product node $env:nodejs_version
   # Typical npm stuff.
   - npm install
-  # Grunt-specific stuff.
-  - npm install -g grunt-cli
 
 # Post-install test scripts.
 test_script:
   # Output useful info for debugging.
   - node --version
   - npm --version
-  - cmd: grunt 
+  - cmd: npm run build
 
 # Don't actually build.
 build: off

@@ -1,6 +1,6 @@
 s3artifactor
 ============
-![TravisCI](https://travis-ci.org/NiteoSoftware/s3artifactor.svg?branch=master)
+![TravisCI](https://travis-ci.org/VeriShip/s3artifactor.svg?branch=master)
 ![Build status](https://ci.appveyor.com/api/projects/status/78ubm4xukw4tc0sy?svg=true)
 
 Most developers don't worry about what they're code produces or where it is stored.  We could rely on the build server to keep the artifacts until we need them, but what if we need to rebuild the build server? We created this tool to solve this problem.  

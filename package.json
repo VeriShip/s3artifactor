@@ -4,7 +4,8 @@
   "description": "A command line nodejs app that utilizes AWS S3 for an artifact repository.",
   "main": "bin/lib/artifactory.js",
   "scripts": {
-    "test": "grunt --no-color"
+    "test": "grunt --no-color",
+	"build": "grunt"
   },
   "bin": {
     "s3artifactor": "./bin/lib/program.js"
@@ -16,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/NiteoSoftware/s3artifactor.git"
+    "url": "https://github.com/VeriShip/s3artifactor.git"
   },
   "engines": {
     "node": ">0.8.0"

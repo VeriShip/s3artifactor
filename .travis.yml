@@ -1,18 +1,22 @@
 language: node_js
 node_js:
 - '0.10'
+- '0.11'
+- '0.12'
+- '4.0'
+- '4.1'
 before_script:
-- npm install -g grunt-cli
 - npm install
 script:
-- grunt
+- npm run build
 deploy:
   provider: npm
   email: npm@niteoholdings.com
   skip_cleanup: true
   api_key:
-    secure: "NIH1ug5gpKF3asg0pDZz4hi4Hu16joyedcQXsMyDgernj1l/pWCegRAdqenItWBTrf9SiKyk3sYxsQ55THTPDg5G29wywD1JS4GQzjl2L0AxqfAisIN2p2c67tWFuuuVWCkuMoo79UfP7J2Lr/yl2AFAWyWVJ8aVMxOaiCQzzH8="
+    secure: L9FqT7LI8JxlcGLq59nQvfzIdu9fDia3u10C3mVdQtgS/3B8I479XhqT6Gae6OjB//LIe4O0VeKn0dyHpisljDV5llSgbGDDr81fLXiGUsHluE+lTnJaNrx307VfrwHkHSh1xkW+fSI/l7aP8mypiLMMDVJLpJCukzXD0VgvLoc=
   on:
     tags: true
     all_branches: true
-    repo: NiteoSoftware/s3artifactor
+    repo: VeriShip/s3artifactor
+    node: '4.1'
